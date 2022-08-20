@@ -1,13 +1,12 @@
 ﻿using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 
 namespace ScreenShot
 {
@@ -16,12 +15,12 @@ namespace ScreenShot
     /// </summary>
     public partial class MainWindow : Window
     {
+        private Point startPoint;
+        private Image bakupImage = new Image();
+        private Image selectedImage;
+        private Rectangle rectangle;
         private bool isMouseDown = false;
-        private System.Windows.Point startPoint;
-        private System.Windows.Shapes.Rectangle rectangle;
-        private System.Windows.Controls.Image bakupImage = new System.Windows.Controls.Image();
-        private System.Windows.Controls.Image selectedImage;
-        private double ratio;
+        private double ratio = 1;
 
         public MainWindow()
         {
@@ -42,9 +41,9 @@ namespace ScreenShot
             double screenWidth = SystemParameters.VirtualScreenWidth;
             double screenHeight = SystemParameters.VirtualScreenHeight;
 
-            using (Bitmap bmp = new Bitmap((int)screenWidth, (int)screenHeight))
+            using (System.Drawing.Bitmap bmp = new System.Drawing.Bitmap((int)screenWidth, (int)screenHeight))
             {
-                using (Graphics g = Graphics.FromImage(bmp))
+                using (System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(bmp))
                 {
                     Visibility = Visibility.Collapsed;
 
@@ -72,17 +71,18 @@ namespace ScreenShot
             double screenWidth = SystemParameters.VirtualScreenWidth * ratio;
             double screenHeight = SystemParameters.VirtualScreenHeight * ratio;
 
+            // hide main window
             Width = 0;
             Height = 0;
             Top = int.MinValue;
             Left = int.MinValue;
 
-            using (Bitmap bmp = new Bitmap((int)screenWidth, (int)screenHeight))
+            using (System.Drawing.Bitmap bmp = new System.Drawing.Bitmap((int)screenWidth, (int)screenHeight))
             {
-                using (Graphics g = Graphics.FromImage(bmp))
+                using (System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(bmp))
                 {
                     g.CopyFromScreen((int)screenLeft, (int)screenTop, 0, 0, bmp.Size);
-                    System.Windows.Controls.Image image = new System.Windows.Controls.Image();
+                    Image image = new Image();
                     image.Source = BitmapToImageSource(bmp);
                     bakupImage.Source = BitmapToImageSource(bmp);
 
@@ -104,11 +104,12 @@ namespace ScreenShot
                     window.MouseMove += Window_MouseMove;
 
                     Grid grid = new Grid();
+                    // 黑色遮罩
                     Grid shadowGrid = new Grid();
                     Canvas canvas = new Canvas();
-                    rectangle = new System.Windows.Shapes.Rectangle();
-                    selectedImage = new System.Windows.Controls.Image();
-                    System.Windows.Media.Brush brush = new SolidColorBrush(Colors.Black);
+                    rectangle = new Rectangle();
+                    selectedImage = new Image();
+                    Brush brush = new SolidColorBrush(Colors.Black);
                     brush.Opacity = 0.5;
 
                     grid.Margin = new Thickness(0);
@@ -142,7 +143,7 @@ namespace ScreenShot
             rectangle.Width = rect.Width;
             rectangle.Height = rect.Height;
             rectangle.StrokeThickness = 2;
-            rectangle.Stroke = System.Windows.Media.Brushes.Aqua;
+            rectangle.Stroke = Brushes.Aqua;
 
             if ((int)rect.Width > 0 && (int)rect.Height > 0)
             {
@@ -171,20 +172,22 @@ namespace ScreenShot
                 Window window = sender as Window;
                 window.Close();
             }
+            rectangle.Width = 0;
+            rectangle.Height = 0;
             selectedImage.Source = null;
         }
 
-        private void Window_PreviewMouseRightButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Window_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
             isMouseDown = false;
             Window window = sender as Window;
             window.Close();
         }
 
-        private ImageSource BitmapToImageSource(Bitmap bitmap)
+        private ImageSource BitmapToImageSource(System.Drawing.Bitmap bitmap)
         {
             MemoryStream stream = new MemoryStream();
-            bitmap.Save(stream, ImageFormat.Bmp);
+            bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
             stream.Position = 0;
             BitmapImage bitmapImage = new BitmapImage();
             bitmapImage.BeginInit();
