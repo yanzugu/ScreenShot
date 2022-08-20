@@ -21,15 +21,16 @@ namespace ScreenShot
         private System.Windows.Shapes.Rectangle rectangle;
         private System.Windows.Controls.Image bakupImage = new System.Windows.Controls.Image();
         private System.Windows.Controls.Image selectedImage;
+        private double ratio;
 
         public MainWindow()
         {
             InitializeComponent();
+            ratio = System.Windows.Forms.Screen.AllScreens[0].Bounds.Width / SystemParameters.PrimaryScreenWidth;
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            //GetScreenSnapshot();
             GetScreenshot();
         }
 
@@ -68,8 +69,8 @@ namespace ScreenShot
 
             double screenLeft = SystemParameters.VirtualScreenLeft;
             double screenTop = SystemParameters.VirtualScreenTop;
-            double screenWidth = SystemParameters.VirtualScreenWidth;
-            double screenHeight = SystemParameters.VirtualScreenHeight;
+            double screenWidth = SystemParameters.VirtualScreenWidth * ratio;
+            double screenHeight = SystemParameters.VirtualScreenHeight * ratio;
 
             Width = 0;
             Height = 0;
@@ -86,12 +87,10 @@ namespace ScreenShot
                     bakupImage.Source = BitmapToImageSource(bmp);
 
                     Window window = new Window();
-                    /*var dpi = VisualTreeHelper.GetDpi(window);
-                    Transform transform = new ScaleTransform(1 / dpi.DpiScaleX, 1 / dpi.DpiScaleY);*/
 
-                    window.Width = screenWidth;
-                    window.Height = screenHeight;
-                    window.Left = screenLeft;
+                    window.Width = screenWidth / ratio;
+                    window.Height = screenHeight / ratio;
+                    window.Left = screenLeft / ratio;
                     window.Top = screenTop;
                     window.Owner = this;
                     window.WindowStyle = WindowStyle.None;
@@ -147,7 +146,8 @@ namespace ScreenShot
 
             if ((int)rect.Width > 0 && (int)rect.Height > 0)
             {
-                selectedImage.Source = new CroppedBitmap((BitmapSource)bakupImage.Source, new Int32Rect((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height));
+                var selectedRect = new Int32Rect((int)(rect.X * ratio), (int)(rect.Y * ratio), (int)(rect.Width * ratio), (int)(rect.Height * ratio));
+                selectedImage.Source = new CroppedBitmap((BitmapSource)bakupImage.Source, selectedRect);
             }
 
             Canvas.SetLeft(selectedImage, rect.X);
@@ -220,7 +220,7 @@ namespace ScreenShot
             {
                 if (imageSource == null)
                     return false;
-                
+
                 string path = OpenFolderPicker();
 
                 if (string.IsNullOrEmpty(path))
